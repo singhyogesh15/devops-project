@@ -1,0 +1,39 @@
+name: Production CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Image Tag
+        id: vars
+        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker Image
+        run: |
+          docker build -t yogesh15/my-web-app:${{ env.TAG }} .
+
+      - name: Push Versioned Image
+        run: |
+          docker push yogesh15/my-web-app:${{ env.TAG }}
+
+      - name: Tag as Latest (Optional but useful)
+        run: |
+          docker tag yogesh15/my-web-app:${{ env.TAG }} yogesh15/my-web-app:latest
+          docker push yogesh15/my-web-app:latest
